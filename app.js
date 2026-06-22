@@ -75,6 +75,12 @@
       slope: $("plotSlope").value.trim(),
       aspect: $("plotAspect").value,
       canopy: $("plotCanopy").value.trim(),
+      gaps: $("plotGaps").value.trim(),
+      soilTexture: $("plotSoilTexture").value,
+      soilColour: $("plotSoilColour").value.trim(),
+      litterDepth: $("plotLitterDepth").value.trim(),
+      drainage: $("plotDrainage").value,
+      disturbance: $("plotDisturbance").value,
       notes: $("plotNotes").value.trim(),
     };
 
@@ -127,6 +133,12 @@
     $("plotSlope").value = plot.slope || "";
     $("plotAspect").value = plot.aspect || "";
     $("plotCanopy").value = plot.canopy || "";
+    $("plotGaps").value = plot.gaps || "";
+    $("plotSoilTexture").value = plot.soilTexture || "";
+    $("plotSoilColour").value = plot.soilColour || "";
+    $("plotLitterDepth").value = plot.litterDepth || "";
+    $("plotDrainage").value = plot.drainage || "";
+    $("plotDisturbance").value = plot.disturbance || "";
     $("plotNotes").value = plot.notes || "";
     $("plotCancelBtn").hidden = false;
     plotForm.querySelector("button[type=submit]").textContent = "Update plot";
@@ -161,13 +173,22 @@
     const plot = selectedPlot();
     if (!plot) return;
     const id = $("treeId").value;
+    const distance = $("treeDistance").value.trim();
+    const angleBase = $("treeAngleBase").value.trim();
+    const angleTop = $("treeAngleTop").value.trim();
     const data = {
-      species: $("treeSpecies").value.trim(),
-      tag: $("treeTag").value.trim(),
+      running: $("treeRunning").value.trim(),
+      speciesLocal: $("treeSpeciesLocal").value.trim(),
+      speciesId: $("treeSpeciesId").value.trim(),
       dbh: $("treeDbh").value.trim(),
-      height: $("treeHeight").value.trim(),
+      distance: distance,
+      angleBase: angleBase,
+      angleTop: angleTop,
+      height: heightString(distance, angleBase, angleTop),
+      canopyX: $("treeCanopyX").value.trim(),
+      canopyY: $("treeCanopyY").value.trim(),
+      crownClass: $("treeCrownClass").value,
       health: $("treeHealth").value,
-      status: $("treeStatus").value,
       notes: $("treeNotes").value.trim(),
     };
 
@@ -187,26 +208,74 @@
 
   $("treeCancelBtn").addEventListener("click", resetTreeForm);
 
+  // Clinometer tangent method. Angles in degrees, signed relative to
+  // horizontal (looking up = +, looking down = −). The base angle is
+  // usually negative on flat ground; the difference of tangents times
+  // the horizontal distance gives the tree height.
+  function computeHeight(distance, angleBase, angleTop) {
+    const d = parseFloat(distance);
+    const ab = parseFloat(angleBase);
+    const at = parseFloat(angleTop);
+    if ([d, ab, at].some((n) => isNaN(n))) return null;
+    const rad = (deg) => (deg * Math.PI) / 180;
+    return d * (Math.tan(rad(at)) - Math.tan(rad(ab)));
+  }
+  function heightString(distance, angleBase, angleTop) {
+    const h = computeHeight(distance, angleBase, angleTop);
+    return h == null ? "" : (Math.round(h * 100) / 100).toString();
+  }
+
+  // Live height preview as the three measurements are typed.
+  function updateHeightPreview() {
+    const h = computeHeight(
+      $("treeDistance").value,
+      $("treeAngleBase").value,
+      $("treeAngleTop").value
+    );
+    $("treeHeightCalc").textContent = h == null ? "—" : (Math.round(h * 10) / 10).toString();
+  }
+  ["treeDistance", "treeAngleBase", "treeAngleTop"].forEach((id) =>
+    $(id).addEventListener("input", updateHeightPreview)
+  );
+
   function resetTreeForm() {
     treeForm.reset();
     $("treeId").value = "";
-    $("treeStatus").value = "Living";
     $("treeCancelBtn").hidden = true;
     treeForm.querySelector("button[type=submit]").textContent = "Add tree";
-    $("treeSpecies").focus();
+    suggestRunningNumber();
+    updateHeightPreview();
+    $("treeRunning").focus();
+  }
+
+  // Pre-fill the next running number for the selected plot.
+  function suggestRunningNumber() {
+    const plot = selectedPlot();
+    if (!plot || !plot.trees) return;
+    const max = plot.trees.reduce((m, t) => {
+      const n = parseInt(t.running, 10);
+      return isNaN(n) ? m : Math.max(m, n);
+    }, 0);
+    $("treeRunning").value = String(max + 1);
   }
 
   function editTree(tree) {
     $("treeId").value = tree.id;
-    $("treeSpecies").value = tree.species || "";
-    $("treeTag").value = tree.tag || "";
+    $("treeRunning").value = tree.running || "";
+    $("treeSpeciesLocal").value = tree.speciesLocal || "";
+    $("treeSpeciesId").value = tree.speciesId || "";
     $("treeDbh").value = tree.dbh || "";
-    $("treeHeight").value = tree.height || "";
+    $("treeDistance").value = tree.distance || "";
+    $("treeAngleBase").value = tree.angleBase || "";
+    $("treeAngleTop").value = tree.angleTop || "";
+    $("treeCanopyX").value = tree.canopyX || "";
+    $("treeCanopyY").value = tree.canopyY || "";
+    $("treeCrownClass").value = tree.crownClass || "";
     $("treeHealth").value = tree.health || "";
-    $("treeStatus").value = tree.status || "Living";
     $("treeNotes").value = tree.notes || "";
     $("treeCancelBtn").hidden = false;
     treeForm.querySelector("button[type=submit]").textContent = "Update tree";
+    updateHeightPreview();
     treeForm.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
@@ -307,6 +376,7 @@
     ctx.textContent = plotLabel(plot);
     treeForm.hidden = false;
     refreshSpeciesList();
+    if (!$("treeId").value) suggestRunningNumber();
 
     body.innerHTML = "";
     if (!plot.trees || plot.trees.length === 0) {
@@ -319,10 +389,11 @@
       plot.trees.forEach((tree) => {
         const tr = document.createElement("tr");
         tr.append(
-          td(tree.species || "—"),
-          td(tree.tag || ""),
+          td(tree.running || "", "num"),
+          td(tree.speciesLocal || "—"),
           td(tree.dbh || "", "num"),
           td(tree.height || "", "num"),
+          td(tree.crownClass || ""),
           td(tree.health || "")
         );
         const actions = document.createElement("td");
@@ -357,7 +428,9 @@
     const dbhVals = trees.map((t) => parseFloat(t.dbh)).filter((n) => !isNaN(n));
     const htVals = trees.map((t) => parseFloat(t.height)).filter((n) => !isNaN(n));
     const species = new Set(
-      trees.map((t) => t.species.trim().toLowerCase()).filter(Boolean)
+      trees
+        .map((t) => (t.speciesId || t.speciesLocal || "").trim().toLowerCase())
+        .filter(Boolean)
     );
     const avg = (a) => (a.length ? (a.reduce((s, n) => s + n, 0) / a.length) : null);
 
@@ -398,15 +471,21 @@
   }
 
   function refreshSpeciesList() {
-    const seen = new Set();
+    const local = new Set();
+    const ids = new Set();
     state.plots.forEach((p) =>
       (p.trees || []).forEach((t) => {
-        if (t.species) seen.add(t.species.trim());
+        if (t.speciesLocal) local.add(t.speciesLocal.trim());
+        if (t.speciesId) ids.add(t.speciesId.trim());
       })
     );
-    const dl = $("speciesList");
+    fillDatalist("speciesLocalList", local);
+    fillDatalist("speciesIdList", ids);
+  }
+  function fillDatalist(id, values) {
+    const dl = $(id);
     dl.innerHTML = "";
-    [...seen].sort().forEach((s) => {
+    [...values].sort().forEach((s) => {
       const o = document.createElement("option");
       o.value = s;
       dl.appendChild(o);
@@ -466,23 +545,33 @@
   // One row per tree, with plot fields repeated. A plot with no trees
   // still produces a single row so an empty site visit isn't lost.
   function buildCsv(plot) {
-    const headers = [
+    const plotHeaders = [
       "plot_number", "plot_name", "date", "surveyor", "latitude", "longitude",
-      "plot_shape", "plot_size", "slope_deg", "aspect", "canopy_pct",
-      "plot_notes", "tree_species", "tree_tag", "dbh_cm", "height_m",
-      "health", "status", "tree_notes",
+      "plot_shape", "plot_size", "slope_deg", "aspect", "canopy_cover_pct",
+      "soil_texture", "soil_colour", "litter_depth_cm", "drainage",
+      "disturbance_level", "number_of_gaps", "plot_notes",
+    ];
+    const treeHeaders = [
+      "running_number", "species_local", "species_id", "dbh_cm",
+      "distance_m", "angle_base_deg", "angle_top_deg", "height_m",
+      "canopy_dia_x_m", "canopy_dia_y_m", "crown_class", "health_status",
+      "tree_notes",
     ];
     const base = [
       plot.number, plot.name, plot.date, plot.surveyor, plot.lat, plot.lng,
-      plot.shape, plot.size, plot.slope, plot.aspect, plot.canopy, plot.notes,
+      plot.shape, plot.size, plot.slope, plot.aspect, plot.canopy,
+      plot.soilTexture, plot.soilColour, plot.litterDepth, plot.drainage,
+      plot.disturbance, plot.gaps, plot.notes,
     ];
-    const rows = [headers];
+    const rows = [plotHeaders.concat(treeHeaders)];
     if (!plot.trees || plot.trees.length === 0) {
-      rows.push([...base, "", "", "", "", "", "", ""]);
+      rows.push([...base, ...treeHeaders.map(() => "")]);
     } else {
       plot.trees.forEach((t) => {
         rows.push([
-          ...base, t.species, t.tag, t.dbh, t.height, t.health, t.status, t.notes,
+          ...base, t.running, t.speciesLocal, t.speciesId, t.dbh,
+          t.distance, t.angleBase, t.angleTop, t.height,
+          t.canopyX, t.canopyY, t.crownClass, t.health, t.notes,
         ]);
       });
     }
@@ -532,6 +621,12 @@
           slope: p.slope || "",
           aspect: p.aspect || "",
           canopy: p.canopy || "",
+          gaps: p.gaps || "",
+          soilTexture: p.soilTexture || "",
+          soilColour: p.soilColour || "",
+          litterDepth: p.litterDepth || "",
+          drainage: p.drainage || "",
+          disturbance: p.disturbance || "",
           notes: p.notes || "",
           trees: Array.isArray(p.trees) ? p.trees.map((t) => ({ id: t.id || uid(), ...t })) : [],
         }));

@@ -101,14 +101,75 @@
           </label>
         </div>
 
-        <label class="field">
-          <span>Canopy cover (%)</span>
-          <input id="plotCanopy" type="number" step="any" min="0" max="100" placeholder="0–100" />
-        </label>
+        <div class="grid-2">
+          <label class="field">
+            <span>Canopy cover (%)</span>
+            <input id="plotCanopy" type="number" step="any" min="0" max="100" placeholder="0–100" />
+          </label>
+          <label class="field">
+            <span>Number of gaps</span>
+            <input id="plotGaps" type="number" step="1" min="0" placeholder="Canopy gaps" />
+          </label>
+        </div>
+
+        <fieldset class="subgroup">
+          <legend>Soil &amp; site</legend>
+          <div class="grid-2">
+            <label class="field">
+              <span>Soil texture</span>
+              <select id="plotSoilTexture">
+                <option value="">—</option>
+                <option>Sand</option>
+                <option>Loamy sand</option>
+                <option>Sandy loam</option>
+                <option>Loam</option>
+                <option>Silt loam</option>
+                <option>Silt</option>
+                <option>Clay loam</option>
+                <option>Silty clay</option>
+                <option>Clay</option>
+                <option>Peat</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Soil colour</span>
+              <input id="plotSoilColour" type="text" placeholder="e.g. dark brown / 10YR 3/2" />
+            </label>
+          </div>
+          <div class="grid-2">
+            <label class="field">
+              <span>Litter depth (cm)</span>
+              <input id="plotLitterDepth" type="number" step="any" min="0" placeholder="0–…" />
+            </label>
+            <label class="field">
+              <span>Drainage</span>
+              <select id="plotDrainage">
+                <option value="">—</option>
+                <option>Very poor</option>
+                <option>Poor</option>
+                <option>Imperfect</option>
+                <option>Moderate</option>
+                <option>Well drained</option>
+                <option>Excessive</option>
+              </select>
+            </label>
+          </div>
+          <label class="field">
+            <span>Disturbance level</span>
+            <select id="plotDisturbance">
+              <option value="">—</option>
+              <option>None</option>
+              <option>Low</option>
+              <option>Moderate</option>
+              <option>High</option>
+              <option>Severe</option>
+            </select>
+          </label>
+        </fieldset>
 
         <label class="field">
           <span>Notes</span>
-          <textarea id="plotNotes" rows="2" placeholder="Habitat, disturbances, access…"></textarea>
+          <textarea id="plotNotes" rows="2" placeholder="Habitat, access, other observations…"></textarea>
         </label>
 
         <div class="form-actions">
@@ -131,30 +192,76 @@
         <input type="hidden" id="treeId" />
         <div class="grid-2">
           <label class="field">
-            <span>Species <em>*</em></span>
-            <input id="treeSpecies" type="text" required placeholder="e.g. Eucalyptus regnans" list="speciesList" />
-            <datalist id="speciesList"></datalist>
+            <span>Running number <em>*</em></span>
+            <input id="treeRunning" type="number" step="1" min="1" required placeholder="e.g. 1" />
           </label>
           <label class="field">
-            <span>Tag #</span>
-            <input id="treeTag" type="text" placeholder="Optional tag" />
+            <span>Species (local name) <em>*</em></span>
+            <input id="treeSpeciesLocal" type="text" required placeholder="Local name" list="speciesLocalList" />
+            <datalist id="speciesLocalList"></datalist>
           </label>
         </div>
 
         <div class="grid-2">
+          <label class="field">
+            <span>Species ID</span>
+            <input id="treeSpeciesId" type="text" placeholder="Code / scientific" list="speciesIdList" />
+            <datalist id="speciesIdList"></datalist>
+          </label>
           <label class="field">
             <span>DBH (cm)</span>
             <input id="treeDbh" type="number" step="any" placeholder="Diameter at breast height" />
           </label>
+        </div>
+
+        <fieldset class="subgroup">
+          <legend>Height — clinometer</legend>
+          <div class="grid-3">
+            <label class="field">
+              <span>Distance to tree (m)</span>
+              <input id="treeDistance" type="number" step="any" placeholder="Horizontal" />
+            </label>
+            <label class="field">
+              <span>Angle to base (°)</span>
+              <input id="treeAngleBase" type="number" step="any" placeholder="Down = −" />
+            </label>
+            <label class="field">
+              <span>Angle to top (°)</span>
+              <input id="treeAngleTop" type="number" step="any" placeholder="Up = +" />
+            </label>
+          </div>
+          <div class="calc-row">
+            <span class="calc-label">Calculated height</span>
+            <span id="treeHeightCalc" class="calc-value">—</span>
+            <span class="muted">m</span>
+          </div>
+        </fieldset>
+
+        <div class="grid-2">
           <label class="field">
-            <span>Height (m)</span>
-            <input id="treeHeight" type="number" step="any" placeholder="Estimated height" />
+            <span>Canopy diameter X (m)</span>
+            <input id="treeCanopyX" type="number" step="any" placeholder="Widest axis" />
+          </label>
+          <label class="field">
+            <span>Canopy diameter Y (m)</span>
+            <input id="treeCanopyY" type="number" step="any" placeholder="Perpendicular axis" />
           </label>
         </div>
 
         <div class="grid-2">
           <label class="field">
-            <span>Health</span>
+            <span>Crown class</span>
+            <select id="treeCrownClass">
+              <option value="">—</option>
+              <option>Emergent</option>
+              <option>Dominant</option>
+              <option>Co-dominant</option>
+              <option>Intermediate</option>
+              <option>Suppressed</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Health status</span>
             <select id="treeHealth">
               <option value="">—</option>
               <option>Healthy</option>
@@ -162,14 +269,6 @@
               <option>Declining</option>
               <option>Dead (standing)</option>
               <option>Dead (fallen)</option>
-            </select>
-          </label>
-          <label class="field">
-            <span>Status</span>
-            <select id="treeStatus">
-              <option>Living</option>
-              <option>Dead</option>
-              <option>Stump</option>
             </select>
           </label>
         </div>
@@ -193,10 +292,11 @@
         <table id="treeTable" class="data-table" hidden>
           <thead>
             <tr>
+              <th>#</th>
               <th>Species</th>
-              <th>Tag</th>
               <th>DBH (cm)</th>
               <th>Height (m)</th>
+              <th>Crown</th>
               <th>Health</th>
               <th></th>
             </tr>

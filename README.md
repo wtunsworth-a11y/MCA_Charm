@@ -6,9 +6,16 @@ forest plots. Built for Charmelle — no install, no accounts, works offline.
 ## What it does
 
 - Record **plots** (sites): plot number (1–50), name/ID, date, surveyor, GPS
-  coordinates, shape, size, slope, aspect, canopy cover and notes.
-- Record **trees** within each plot: species, tag number, DBH (diameter at
-  breast height), height, health, status and notes.
+  coordinates, shape, size, slope, aspect, canopy cover, number of gaps, soil
+  texture, soil colour, litter depth, drainage, disturbance level and notes.
+- Record **trees** within each plot: running number, species (local name),
+  species ID, DBH (diameter at breast height), clinometer height measurements,
+  canopy diameters (X and Y), crown class, health status and notes.
+- **Height is calculated** from three clinometer readings — distance to the
+  tree, angle to the base and angle to the top — using the tangent method:
+  `height = distance × (tan(angle_top) − tan(angle_base))`. Enter downward
+  angles as negative. The result updates live and is saved with the raw
+  readings.
 - Live per-plot summary: tree count, species richness, average DBH and height.
 - **Per-plot export** to CSV (one row per tree, plot fields repeated) for
   Excel / GIS, and to JSON for a full backup that can be re-imported.
