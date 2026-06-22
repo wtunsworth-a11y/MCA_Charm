@@ -1,0 +1,57 @@
+name: Deploy to GitHub Pages
+
+# Publishes the Forest Plot Recorder so it can be opened from a URL on a phone.
+# Runs whenever the app files change on the default branch.
+
+on:
+  push:
+    branches: [claude/keen-faraday-f53muw]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment; newer pushes supersede in-progress ones.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Assemble site
+        run: |
+          mkdir -p _site
+          cp CG_Peanut.html styles.css app.js _site/
+          # Friendly root URL: redirect the site root to the app file.
+          printf '%s\n' \
+            '<!DOCTYPE html>' \
+            '<html lang="en"><head><meta charset="utf-8">' \
+            '<meta http-equiv="refresh" content="0; url=CG_Peanut.html">' \
+            '<link rel="canonical" href="CG_Peanut.html">' \
+            '<title>Forest Plot Recorder</title></head>' \
+            '<body><p>Redirecting to <a href="CG_Peanut.html">Forest Plot Recorder</a>…</p></body></html>' \
+            > _site/index.html
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
