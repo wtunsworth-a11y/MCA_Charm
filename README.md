@@ -5,23 +5,26 @@ forest plots. Built for Charmelle — no install, no accounts, works offline.
 
 ## What it does
 
-- Record **plots** (sites): name/ID, date, surveyor, GPS coordinates, shape,
-  size, slope, aspect, canopy cover and notes.
+- Record **plots** (sites): plot number (1–50), name/ID, date, surveyor, GPS
+  coordinates, shape, size, slope, aspect, canopy cover and notes.
 - Record **trees** within each plot: species, tag number, DBH (diameter at
   breast height), height, health, status and notes.
 - Live per-plot summary: tree count, species richness, average DBH and height.
-- **Export to CSV** (one row per tree, plot fields repeated) for Excel / GIS.
-- **Export to JSON** for a full backup, and **Import** it back later.
+- **Per-plot export** to CSV (one row per tree, plot fields repeated) for
+  Excel / GIS, and to JSON for a full backup that can be re-imported.
+- Export files are named **`CG_P_<plot number>`** — e.g. `CG_P_12.csv`,
+  `CG_P_12.json` — so the three of you can share files without confusion.
 - Captures GPS from the device with one tap (when permission is granted).
 
 ## How to use it
 
 Just open `index.html` in any modern web browser — desktop or phone.
 
-1. Fill in the **Plot** form and press *Save plot*.
+1. Fill in the **Plot** form (choose the plot number 1–50) and press *Save plot*.
 2. Select the plot in the list, then add **Trees** to it.
-3. Use **Export CSV** / **Export JSON** to save the data to a file you can
-   email, back up, or open in a spreadsheet.
+3. With a plot selected, use **Export plot (CSV)** / **Export plot (JSON)** to
+   save that plot to a `CG_P_<number>` file you can email, back up, or open in
+   a spreadsheet. Each plot exports as its own file.
 
 ### Where is my data?
 

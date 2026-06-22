@@ -17,8 +17,8 @@
       </div>
     </div>
     <div class="header-actions">
-      <button id="exportCsvBtn" class="btn btn-light" type="button">Export CSV</button>
-      <button id="exportJsonBtn" class="btn btn-light" type="button">Export JSON</button>
+      <button id="exportCsvBtn" class="btn btn-light" type="button">Export plot (CSV)</button>
+      <button id="exportJsonBtn" class="btn btn-light" type="button">Export plot (JSON)</button>
       <button id="importBtn" class="btn btn-light" type="button">Import</button>
       <input id="importFile" type="file" accept=".json,application/json" hidden />
     </div>
@@ -36,8 +36,10 @@
         <input type="hidden" id="plotId" />
         <div class="grid-2">
           <label class="field">
-            <span>Plot name / ID <em>*</em></span>
-            <input id="plotName" type="text" required placeholder="e.g. North Ridge P-01" />
+            <span>Plot number <em>*</em></span>
+            <select id="plotNumber" required>
+              <option value="">Select 1–50</option>
+            </select>
           </label>
           <label class="field">
             <span>Date <em>*</em></span>
@@ -45,10 +47,16 @@
           </label>
         </div>
 
-        <label class="field">
-          <span>Surveyor</span>
-          <input id="plotSurveyor" type="text" placeholder="Recorder name" />
-        </label>
+        <div class="grid-2">
+          <label class="field">
+            <span>Plot name / ID</span>
+            <input id="plotName" type="text" placeholder="e.g. North Ridge" />
+          </label>
+          <label class="field">
+            <span>Surveyor</span>
+            <input id="plotSurveyor" type="text" placeholder="Recorder name" />
+          </label>
+        </div>
 
         <div class="grid-2">
           <label class="field">

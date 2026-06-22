@@ -64,6 +64,7 @@
     e.preventDefault();
     const id = $("plotId").value;
     const data = {
+      number: $("plotNumber").value,
       name: $("plotName").value.trim(),
       date: $("plotDate").value,
       surveyor: $("plotSurveyor").value.trim(),
@@ -102,8 +103,20 @@
     if (!$("plotDate").value) $("plotDate").value = today();
   }
 
+  // Fill the 1–50 plot-number dropdown.
+  function populatePlotNumbers() {
+    const sel = $("plotNumber");
+    for (let n = 1; n <= 50; n++) {
+      const o = document.createElement("option");
+      o.value = String(n);
+      o.textContent = String(n);
+      sel.appendChild(o);
+    }
+  }
+
   function editPlot(plot) {
     $("plotId").value = plot.id;
+    $("plotNumber").value = plot.number || "";
     $("plotName").value = plot.name || "";
     $("plotDate").value = plot.date || "";
     $("plotSurveyor").value = plot.surveyor || "";
@@ -222,7 +235,9 @@
       meta.className = "meta";
       const name = document.createElement("span");
       name.className = "name";
-      name.textContent = plot.name || "(unnamed plot)";
+      name.textContent =
+        (plot.number ? "Plot " + plot.number : "(no number)") +
+        (plot.name ? " — " + plot.name : "");
       const sub = document.createElement("span");
       sub.className = "sub";
       sub.textContent = [plot.date, plot.surveyor, coordLabel(plot)]
@@ -242,7 +257,7 @@
       });
       const delBtn = iconButton("🗑", "Delete plot", (ev) => {
         ev.stopPropagation();
-        if (confirm(`Delete plot "${plot.name}" and its ${plot.trees.length} tree(s)?`)) {
+        if (confirm(`Delete ${plotLabel(plot)} and its ${plot.trees.length} tree(s)?`)) {
           state.plots = state.plots.filter((p) => p.id !== plot.id);
           if (state.selectedPlotId === plot.id) state.selectedPlotId = null;
           save();
@@ -289,7 +304,7 @@
       return;
     }
 
-    ctx.textContent = plot.name || "(unnamed plot)";
+    ctx.textContent = plotLabel(plot);
     treeForm.hidden = false;
     refreshSpeciesList();
 
@@ -401,53 +416,76 @@
   /* ============================================================
      EXPORT / IMPORT
      ============================================================ */
+  // Files are named per plot: CG_P_<number>.csv / .json
+  const FILE_PREFIX = "CG_P_";
+
+  function exportFilename(plot, ext) {
+    const num = plot.number || "x";
+    return `${FILE_PREFIX}${num}.${ext}`;
+  }
+
+  // Guard shared by both export buttons: must have a plot selected,
+  // and it must carry a plot number (the basis for the filename).
+  function plotForExport() {
+    const plot = selectedPlot();
+    if (!plot) {
+      toast("Select a plot to export");
+      return null;
+    }
+    if (!plot.number) {
+      toast("This plot has no number — edit it and set 1–50");
+      return null;
+    }
+    return plot;
+  }
+
   $("exportJsonBtn").addEventListener("click", () => {
-    if (state.plots.length === 0) return toast("Nothing to export yet");
+    const plot = plotForExport();
+    if (!plot) return;
     const payload = {
       app: "Forest Plot Recorder",
       version: 1,
       exportedAt: new Date().toISOString(),
-      plots: state.plots,
+      plots: [plot],
     };
     download(
       JSON.stringify(payload, null, 2),
-      `forest-plots-${stamp()}.json`,
+      exportFilename(plot, "json"),
       "application/json"
     );
-    toast("JSON exported");
+    toast(`Exported ${exportFilename(plot, "json")}`);
   });
 
   $("exportCsvBtn").addEventListener("click", () => {
-    if (state.plots.length === 0) return toast("Nothing to export yet");
-    download(buildCsv(), `forest-plots-${stamp()}.csv`, "text/csv");
-    toast("CSV exported");
+    const plot = plotForExport();
+    if (!plot) return;
+    download(buildCsv(plot), exportFilename(plot, "csv"), "text/csv");
+    toast(`Exported ${exportFilename(plot, "csv")}`);
   });
 
-  // One row per tree, with plot fields repeated. Plots with no trees
-  // still appear as a single row so site visits aren't lost.
-  function buildCsv() {
+  // One row per tree, with plot fields repeated. A plot with no trees
+  // still produces a single row so an empty site visit isn't lost.
+  function buildCsv(plot) {
     const headers = [
-      "plot_name", "date", "surveyor", "latitude", "longitude",
+      "plot_number", "plot_name", "date", "surveyor", "latitude", "longitude",
       "plot_shape", "plot_size", "slope_deg", "aspect", "canopy_pct",
       "plot_notes", "tree_species", "tree_tag", "dbh_cm", "height_m",
       "health", "status", "tree_notes",
     ];
+    const base = [
+      plot.number, plot.name, plot.date, plot.surveyor, plot.lat, plot.lng,
+      plot.shape, plot.size, plot.slope, plot.aspect, plot.canopy, plot.notes,
+    ];
     const rows = [headers];
-    state.plots.forEach((p) => {
-      const base = [
-        p.name, p.date, p.surveyor, p.lat, p.lng, p.shape, p.size,
-        p.slope, p.aspect, p.canopy, p.notes,
-      ];
-      if (!p.trees || p.trees.length === 0) {
-        rows.push([...base, "", "", "", "", "", "", ""]);
-      } else {
-        p.trees.forEach((t) => {
-          rows.push([
-            ...base, t.species, t.tag, t.dbh, t.height, t.health, t.status, t.notes,
-          ]);
-        });
-      }
-    });
+    if (!plot.trees || plot.trees.length === 0) {
+      rows.push([...base, "", "", "", "", "", "", ""]);
+    } else {
+      plot.trees.forEach((t) => {
+        rows.push([
+          ...base, t.species, t.tag, t.dbh, t.height, t.health, t.status, t.notes,
+        ]);
+      });
+    }
     return rows.map((r) => r.map(csvCell).join(",")).join("\r\n");
   }
 
@@ -483,6 +521,7 @@
           : true;
         const normalized = incoming.map((p) => ({
           id: p.id || uid(),
+          number: p.number || "",
           name: p.name || "",
           date: p.date || "",
           surveyor: p.surveyor || "",
@@ -515,11 +554,12 @@
   function today() {
     return new Date().toISOString().slice(0, 10);
   }
-  function stamp() {
-    return new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-");
-  }
   function fmt(n) {
     return n == null ? "—" : (Math.round(n * 10) / 10).toString();
+  }
+  function plotLabel(p) {
+    const base = p.number ? "Plot " + p.number : "(no number)";
+    return p.name ? base + " — " + p.name : base;
   }
   function coordLabel(p) {
     if (!p.lat || !p.lng) return "";
@@ -530,6 +570,7 @@
      INIT
      ============================================================ */
   load();
+  populatePlotNumbers();
   resetPlotForm();
   resetTreeForm();
   renderPlots();
