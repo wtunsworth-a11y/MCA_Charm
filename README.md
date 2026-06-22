@@ -25,7 +25,8 @@ forest plots. Built for Charmelle — no install, no accounts, works offline.
 
 ## How to use it
 
-Just open `index.html` in any modern web browser — desktop or phone.
+Just open `CG_Peanut.html` in any modern web browser — designed for an
+Android phone, and works on desktop too.
 
 1. Fill in the **Plot** form (choose the plot number 1–50) and press *Save plot*.
 2. Select the plot in the list, then add **Trees** to it.
@@ -51,6 +52,6 @@ Netlify, or just share the folder. No build step required.
 
 | File         | Purpose                          |
 |--------------|----------------------------------|
-| `index.html` | Page structure and forms         |
+| `CG_Peanut.html` | Page structure and forms     |
 | `styles.css` | Styling                          |
 | `app.js`     | App logic, storage, export/import|

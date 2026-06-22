@@ -45,6 +45,20 @@
     return state.plots.find((p) => p.id === state.selectedPlotId) || null;
   }
 
+  // -------- tabs --------
+  function setTab(tab) {
+    const isPlot = tab === "plots";
+    $("plotsPanel").classList.toggle("is-active", isPlot);
+    $("treesPanel").classList.toggle("is-active", !isPlot);
+    $("tabPlot").classList.toggle("is-active", isPlot);
+    $("tabTrees").classList.toggle("is-active", !isPlot);
+    $("tabPlot").setAttribute("aria-selected", String(isPlot));
+    $("tabTrees").setAttribute("aria-selected", String(!isPlot));
+    window.scrollTo({ top: 0 });
+  }
+  $("tabPlot").addEventListener("click", () => setTab("plots"));
+  $("tabTrees").addEventListener("click", () => setTab("trees"));
+
   // -------- toast --------
   let toastTimer;
   function toast(msg) {
@@ -84,6 +98,7 @@
       notes: $("plotNotes").value.trim(),
     };
 
+    const isNew = !id;
     if (id) {
       const plot = state.plots.find((p) => p.id === id);
       if (plot) Object.assign(plot, data);
@@ -97,6 +112,8 @@
     resetPlotForm();
     renderPlots();
     renderTrees();
+    // After creating a plot, jump straight to recording its trees.
+    if (isNew) setTab("trees");
   });
 
   $("plotCancelBtn").addEventListener("click", resetPlotForm);
@@ -344,6 +361,7 @@
         save();
         renderPlots();
         renderTrees();
+        setTab("trees");
       };
       li.addEventListener("click", selectPlot);
       li.addEventListener("keydown", (ev) => {
@@ -363,6 +381,7 @@
     const body = $("treeBody");
     const empty = $("treeEmpty");
     const stats = $("plotStats");
+    const tabBadge = $("tabTreesCount");
 
     if (!plot) {
       treeForm.hidden = true;
@@ -370,8 +389,13 @@
       stats.hidden = true;
       empty.hidden = false;
       ctx.textContent = "Select a plot";
+      tabBadge.hidden = true;
       return;
     }
+
+    const treeCount = plot.trees ? plot.trees.length : 0;
+    tabBadge.textContent = String(treeCount);
+    tabBadge.hidden = treeCount === 0;
 
     ctx.textContent = plotLabel(plot);
     treeForm.hidden = false;

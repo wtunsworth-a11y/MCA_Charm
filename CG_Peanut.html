@@ -24,9 +24,18 @@
     </div>
   </header>
 
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button id="tabPlot" class="tab is-active" type="button" role="tab" aria-selected="true" aria-controls="plotsPanel">
+      📋 Plot
+    </button>
+    <button id="tabTrees" class="tab" type="button" role="tab" aria-selected="false" aria-controls="treesPanel">
+      🌳 Trees <span id="tabTreesCount" class="tab-badge" hidden>0</span>
+    </button>
+  </nav>
+
   <main class="layout">
     <!-- ============ PLOTS COLUMN ============ -->
-    <section class="panel" aria-labelledby="plotsHeading">
+    <section id="plotsPanel" class="panel is-active" role="tabpanel" aria-labelledby="plotsHeading">
       <div class="panel-head">
         <h2 id="plotsHeading">Plots</h2>
         <span id="plotCount" class="pill">0</span>
@@ -182,7 +191,7 @@
     </section>
 
     <!-- ============ TREES COLUMN ============ -->
-    <section class="panel" aria-labelledby="treesHeading">
+    <section id="treesPanel" class="panel" role="tabpanel" aria-labelledby="treesHeading">
       <div class="panel-head">
         <h2 id="treesHeading">Trees</h2>
         <span id="treeContext" class="muted">Select a plot</span>
