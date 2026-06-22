@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#2f6b3c" />
+  <title>Forest Plot Recorder</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <span class="leaf" aria-hidden="true">🌲</span>
+      <div>
+        <h1>Forest Plot Recorder</h1>
+        <p class="tagline">Field data for small forest plots</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button id="exportCsvBtn" class="btn btn-light" type="button">Export CSV</button>
+      <button id="exportJsonBtn" class="btn btn-light" type="button">Export JSON</button>
+      <button id="importBtn" class="btn btn-light" type="button">Import</button>
+      <input id="importFile" type="file" accept=".json,application/json" hidden />
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- ============ PLOTS COLUMN ============ -->
+    <section class="panel" aria-labelledby="plotsHeading">
+      <div class="panel-head">
+        <h2 id="plotsHeading">Plots</h2>
+        <span id="plotCount" class="pill">0</span>
+      </div>
+
+      <form id="plotForm" class="form" autocomplete="off">
+        <input type="hidden" id="plotId" />
+        <div class="grid-2">
+          <label class="field">
+            <span>Plot name / ID <em>*</em></span>
+            <input id="plotName" type="text" required placeholder="e.g. North Ridge P-01" />
+          </label>
+          <label class="field">
+            <span>Date <em>*</em></span>
+            <input id="plotDate" type="date" required />
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Surveyor</span>
+          <input id="plotSurveyor" type="text" placeholder="Recorder name" />
+        </label>
+
+        <div class="grid-2">
+          <label class="field">
+            <span>Latitude</span>
+            <input id="plotLat" type="number" step="any" placeholder="-37.81234" />
+          </label>
+          <label class="field">
+            <span>Longitude</span>
+            <input id="plotLng" type="number" step="any" placeholder="144.96321" />
+          </label>
+        </div>
+        <button id="gpsBtn" class="btn btn-ghost btn-block" type="button">📍 Use my current location</button>
+
+        <div class="grid-2">
+          <label class="field">
+            <span>Plot shape</span>
+            <select id="plotShape">
+              <option value="circular">Circular</option>
+              <option value="square">Square</option>
+              <option value="rectangular">Rectangular</option>
+              <option value="transect">Transect</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Size (m² or radius m)</span>
+            <input id="plotSize" type="number" step="any" placeholder="e.g. 100" />
+          </label>
+        </div>
+
+        <div class="grid-2">
+          <label class="field">
+            <span>Slope (°)</span>
+            <input id="plotSlope" type="number" step="any" placeholder="0–90" />
+          </label>
+          <label class="field">
+            <span>Aspect</span>
+            <select id="plotAspect">
+              <option value="">—</option>
+              <option>N</option><option>NE</option><option>E</option><option>SE</option>
+              <option>S</option><option>SW</option><option>W</option><option>NW</option>
+            </select>
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Canopy cover (%)</span>
+          <input id="plotCanopy" type="number" step="any" min="0" max="100" placeholder="0–100" />
+        </label>
+
+        <label class="field">
+          <span>Notes</span>
+          <textarea id="plotNotes" rows="2" placeholder="Habitat, disturbances, access…"></textarea>
+        </label>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Save plot</button>
+          <button id="plotCancelBtn" type="button" class="btn btn-ghost" hidden>Cancel</button>
+        </div>
+      </form>
+
+      <ul id="plotList" class="plot-list"></ul>
+    </section>
+
+    <!-- ============ TREES COLUMN ============ -->
+    <section class="panel" aria-labelledby="treesHeading">
+      <div class="panel-head">
+        <h2 id="treesHeading">Trees</h2>
+        <span id="treeContext" class="muted">Select a plot</span>
+      </div>
+
+      <form id="treeForm" class="form" autocomplete="off" hidden>
+        <input type="hidden" id="treeId" />
+        <div class="grid-2">
+          <label class="field">
+            <span>Species <em>*</em></span>
+            <input id="treeSpecies" type="text" required placeholder="e.g. Eucalyptus regnans" list="speciesList" />
+            <datalist id="speciesList"></datalist>
+          </label>
+          <label class="field">
+            <span>Tag #</span>
+            <input id="treeTag" type="text" placeholder="Optional tag" />
+          </label>
+        </div>
+
+        <div class="grid-2">
+          <label class="field">
+            <span>DBH (cm)</span>
+            <input id="treeDbh" type="number" step="any" placeholder="Diameter at breast height" />
+          </label>
+          <label class="field">
+            <span>Height (m)</span>
+            <input id="treeHeight" type="number" step="any" placeholder="Estimated height" />
+          </label>
+        </div>
+
+        <div class="grid-2">
+          <label class="field">
+            <span>Health</span>
+            <select id="treeHealth">
+              <option value="">—</option>
+              <option>Healthy</option>
+              <option>Stressed</option>
+              <option>Declining</option>
+              <option>Dead (standing)</option>
+              <option>Dead (fallen)</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Status</span>
+            <select id="treeStatus">
+              <option>Living</option>
+              <option>Dead</option>
+              <option>Stump</option>
+            </select>
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Notes</span>
+          <textarea id="treeNotes" rows="2" placeholder="Form, damage, epiphytes…"></textarea>
+        </label>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Add tree</button>
+          <button id="treeCancelBtn" type="button" class="btn btn-ghost" hidden>Cancel</button>
+        </div>
+      </form>
+
+      <div id="treeEmpty" class="empty">
+        <p>Select or create a plot to start recording trees.</p>
+      </div>
+
+      <div class="table-wrap">
+        <table id="treeTable" class="data-table" hidden>
+          <thead>
+            <tr>
+              <th>Species</th>
+              <th>Tag</th>
+              <th>DBH (cm)</th>
+              <th>Height (m)</th>
+              <th>Health</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="treeBody"></tbody>
+        </table>
+      </div>
+
+      <div id="plotStats" class="stats" hidden></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
